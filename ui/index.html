@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omarchy System Control Center — GNOME · KDE · XFCE · Top Bar Unified</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+  <style>
+    :root {
+      --bg-base: #060606;
+      --bg-sidebar: rgba(12, 11, 12, 0.94);
+      --bg-panel: rgba(16, 14, 16, 0.88);
+      --bg-card: rgba(23, 20, 22, 0.78);
+      --bg-card-hover: rgba(31, 27, 29, 0.92);
+      --bg-input: rgba(10, 9, 10, 0.9);
+      --fg: #FAFCFB;
+      --fg-dim: #a89f9d;
+      --fg-muted: #685d60;
+      --accent: #b59790;
+      --accent-soft: rgba(181, 151, 144, 0.16);
+      --accent-border: rgba(181, 151, 144, 0.44);
+      --urgent: #c38b7b;
+      --urgent-soft: rgba(195, 139, 123, 0.16);
+      --green: #87a9b0;
+      --green-soft: rgba(135, 169, 176, 0.16);
+      --cyan: #a5a0b6;
+      --yellow: #d1b894;
+      --border: rgba(250, 252, 251, 0.08);
+      --border-strong: rgba(250, 252, 251, 0.15);
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --radius-sm: 7px;
+      --font-sans: "Inter", "Adwaita Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 12% 8%, rgba(181, 151, 144, 0.09), transparent 38%),
+                  radial-gradient(circle at 88% 90%, rgba(135, 169, 176, 0.08), transparent 42%),
+                  var(--bg-base);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.45;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* Top Header Window Bar */
+    .window-bar {
+      height: 46px;
+      background: rgba(9, 8, 9, 0.96);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.4px;
+    }
+    .brand-badge {
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid var(--accent-border);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .top-telemetry {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--fg-dim);
+    }
+    .telemetry-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .telemetry-pill i { color: var(--accent); }
+
+    /* Main 2-Pane GNOME + KDE Workspace */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left GNOME-style Sidebar */
+    .sidebar {
+      width: 280px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .search-box {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-input-wrap i {
+      position: absolute;
+      left: 11px;
+      color: var(--fg-muted);
+      font-size: 12px;
+    }
+    .search-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: var(--fg);
+      padding: 7px 10px 7px 32px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      outline: none;
+    }
+    .search-input:focus { border-color: var(--accent); }
+
+    .nav-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 10px 16px;
+    }
+    .nav-group-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--fg-muted);
+      padding: 10px 8px 4px;
+      font-weight: 700;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--fg-dim);
+      transition: all 0.12s ease;
+      margin-bottom: 2px;
+      border: 1px solid transparent;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--fg);
+    }
+    .nav-item.active {
+      background: var(--accent-soft);
+      color: var(--fg);
+      border-color: var(--accent-border);
+      font-weight: 600;
+    }
+    .nav-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-item-left i {
+      width: 18px;
+      text-align: center;
+      color: var(--accent);
+      font-size: 13px;
+    }
+    .nav-badge {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--fg-dim);
+    }
+
+    /* Right Content Area */
+    .main-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-panel);
+    }
+    .pane-header {
+      padding: 16px 26px 0;
+      border-bottom: 1px solid var(--border);
+      background: rgba(12, 11, 12, 0.65);
+      flex-shrink: 0;
+    }
+    .pane-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .pane-title {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pane-title i { color: var(--accent); }
+    .pane-subtitle {
+      color: var(--fg-dim);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* KDE-style Deep Sub-Tabs */
+    .subtabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+    }
+    .subtab {
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--fg-dim);
+      border-bottom: 2px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.12s;
+    }
+    .subtab:hover { color: var(--fg); background: rgba(255,255,255,0.03); }
+    .subtab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      font-weight: 600;
+    }
+
+    .pane-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 26px 40px;
+    }
+
+    /* Cards, Grids, Controls */
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    @media (max-width: 1100px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 15px 18px;
+      margin-bottom: 14px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title {
+      font-weight: 600;
+      font-size: 13.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title i { color: var(--accent); }
+    .card-desc { color: var(--fg-dim); font-size: 11.5px; }
+
+    /* GNOME AdwActionRow style */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.045);
+      gap: 16px;
+    }
+    .setting-row:last-child { border-bottom: none; padding-bottom: 2px; }
+    .setting-info { flex: 1; }
+    .setting-label { font-weight: 500; font-size: 13px; color: var(--fg); }
+    .setting-sub { font-size: 11.5px; color: var(--fg-dim); margin-top: 2px; }
+    .setting-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Buttons, Inputs, Selects, Sliders */
+    .btn {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--fg);
+      border: 1px solid var(--border-strong);
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.12s;
+    }
+    .btn:hover { background: rgba(255, 255, 255, 0.11); border-color: var(--accent); }
+    .btn-primary {
+      background: var(--accent-soft);
+      color: var(--fg);
+      border-color: var(--accent);
+    }
+    .btn-primary:hover { background: rgba(181, 151, 144, 0.28); }
+    .btn-danger {
+      background: var(--urgent-soft);
+      color: var(--urgent);
+      border-color: rgba(195, 139, 123, 0.4);
+    }
+    .btn-danger:hover { background: rgba(195, 139, 123, 0.28); }
+    .btn-sm { padding: 4px 9px; font-size: 11.5px; }
+
+    .input, .select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      color: var(--fg);
+      padding: 6px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-family: var(--font-sans);
+      outline: none;
+    }
+    .input:focus, .select:focus { border-color: var(--accent); }
+    .mono { font-family: var(--font-mono); }
+
+    input[type="range"] {
+      accent-color: var(--accent);
+      width: 150px;
+      cursor: pointer;
+    }
+
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: rgba(255,255,255,0.14);
+      transition: .18s; border-radius: 20px;
+      border: 1px solid var(--border-strong);
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 14px; width: 14px;
+      left: 2px; bottom: 2px;
+      background-color: var(--fg-dim);
+      transition: .18s; border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+    }
+    input:checked + .slider:before {
+      transform: translateX(18px);
+      background-color: var(--accent);
+    }
+
+    /* Status Pill */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .pill-ok { background: var(--green-soft); color: var(--green); border: 1px solid rgba(135,169,176,0.35); }
+    .pill-warn { background: var(--urgent-soft); color: var(--urgent); border: 1px solid rgba(195,139,123,0.35); }
+    .pill-neutral { background: rgba(255,255,255,0.06); color: var(--fg-dim); border: 1px solid var(--border); }
+
+    /* Progress Bar */
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.07);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), var(--accent));
+      border-radius: 99px;
+      transition: width 0.25s ease;
+    }
+
+    /* Toast Notification */
+    #toast {
+      position: fixed;
+      bottom: 18px;
+      right: 22px;
+      background: rgba(16, 14, 16, 0.96);
+      border: 1px solid var(--accent);
+      color: var(--fg);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+      z-index: 9999;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    .table th, .table td {
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table th {
+      color: var(--fg-dim);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+    .expand-box {
+      background: rgba(0,0,0,0.28);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top System Telemetry Header -->
+  <header class="window-bar">
+    <div class="brand">
+      <i class="fa-solid fa-sliders" style="color:var(--accent)"></i>
+      <span>OMARCHY SYSTEM CONTROL CENTER</span>
+      <span class="brand-badge">GNOME + KDE + XFCE + TOP BAR UNIFIED</span>
+    </div>
+    <div class="top-telemetry">
+      <div class="telemetry-pill" id="top-wifi"><i class="fa-solid fa-wifi"></i> <span>Wi-Fi</span></div>
+      <div class="telemetry-pill" id="top-bt"><i class="fa-brands fa-bluetooth-b"></i> <span>BT</span></div>
+      <div class="telemetry-pill" id="top-audio"><i class="fa-solid fa-volume-high"></i> <span>Audio</span></div>
+      <div class="telemetry-pill" id="top-bat"><i class="fa-solid fa-battery-three-quarters"></i> <span>Battery</span></div>
+      <div class="telemetry-pill" id="top-ram"><i class="fa-solid fa-memory"></i> <span>RAM</span></div>
+      <button class="btn btn-sm" onclick="refreshState()"><i class="fa-solid fa-rotate"></i> Sync Live</button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Left GNOME-Style Navigation Sidebar -->
+    <aside class="sidebar">
+      <div class="search-box">
+        <div class="search-input-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="nav-search" class="search-input" placeholder="Filter 12 modules & 45+ tabs..." oninput="filterNav(this.value)" />
+        </div>
+      </div>
+      <div class="nav-scroll" id="nav-list"></div>
+    </aside>
+
+    <!-- Right KDE/XFCE Granular Multi-Tabbed Content Area -->
+    <main class="main-pane">
+      <div class="pane-header">
+        <div class="pane-title-row">
+          <div>
+            <div class="pane-title" id="pane-title"></div>
+            <div class="pane-subtitle" id="pane-subtitle"></div>
+          </div>
+          <div id="pane-actions"></div>
+        </div>
+        <div class="subtabs" id="subtabs-bar"></div>
+      </div>
+      <div class="pane-body" id="pane-body">
+        <div class="card">Loading live Omarchy, Hyprland, PipeWire, NetworkManager & Top-Bar state...</div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast"><i class="fa-solid fa-terminal" style="color:var(--accent)"></i> <span id="toast-msg"></span></div>
+
+  <script>
+    let STATE = null;
+    let ACTIVE_CAT = "network";
+    let ACTIVE_TAB = "wifi";
+    let EXPANDED_SSID = "";
+
+    const CATEGORIES = [
+      {
+        group: "Connectivity & Mesh (Top Bar)",
+        items: [
+          {
+            id: "network",
+            icon: "fa-solid fa-network-wired",
+            title: "Wi-Fi, Hotspot & VPN",
+            sub: "haris.network + KDE NetworkManager + Tailscale + Cloudflare WARP",
+            badge: () => {
+              const c = (STATE?.network?.networks || []).find(n => n.connected);
+              return c ? c.ssid : "Offline";
+            },
+            tabs: [
+              { id: "wifi", icon: "fa-solid fa-wifi", label: "Wi-Fi Networks & Band Pinning" },
+              { id: "hotspot", icon: "fa-solid fa-tower-broadcast", label: "Hotspot & Sharing (omhotspot)" },
+              { id: "vpn", icon: "fa-solid fa-shield-halved", label: "Cloudflare WARP & WireGuard" },
+              { id: "tailscale", icon: "fa-solid fa-diagram-project", label: "Tailscale Mesh & Exit Nodes" },
+              { id: "dns", icon: "fa-solid fa-gauge-high", label: "Ethernet, DNS & Speedtest" }
+            ]
+          },
+          {
+            id: "bluetooth",
+            icon: "fa-brands fa-bluetooth-b",
+            title: "Bluetooth & BlueZ",
+            sub: "io.github.hugorolimf.bluetooth + Adapter, Discovery, Codecs & Battery",
+            badge: () => STATE?.bluetooth?.enabled ? "On" : "Off",
+            tabs: [
+              { id: "devices", icon: "fa-solid fa-headphones", label: "Paired & Discovered Devices" },
+              { id: "adapter", icon: "fa-solid fa-microchip", label: "BlueZ Adapter & Visibility" }
+            ]
+          },
+          {
+            id: "cloud",
+            icon: "fa-solid fa-cloud-arrow-up",
+            title: "Glass Drive & iCloud Sync",
+            sub: "haris.glass-drive Native C Engine + iCloud Drive + Rclone FUSE",
+            badge: () => `${(STATE?.cloud?.glassDrive?.accounts || []).length} Acct`,
+            tabs: [
+              { id: "glass", icon: "fa-brands fa-google-drive", label: "Glass Drive (Top Bar Native)" },
+              { id: "icloud", icon: "fa-brands fa-apple", label: "iCloud Drive & Rclone Mounts" }
+            ]
+          }
+        ]
+      },
+      {
+        group: "Audio, Display & Hyprland",
+        items: [
+          {
+            id: "audio",
+            icon: "fa-solid fa-sliders",
+            title: "Audio, PipeWire & EasyEffects",
+            sub: "io.github.kingokeke.audio-boost (150%) + Streams + MPRIS + DSP",
+            badge: () => `${STATE?.audio?.volume ?? 0}%`,
+            tabs: [
+              { id: "outputs", icon: "fa-solid fa-volume-high", label: "Output Sinks & 150% Boost" },
+              { id: "inputs", icon: "fa-solid fa-microphone", label: "Microphones & Capture" },
+              { id: "streams", icon: "fa-solid fa-wave-square", label: "Per-App Audio Streams & MPRIS" },
+              { id: "dsp", icon: "fa-solid fa-wand-magic-sparkles", label: "EasyEffects Studio & Speaker Tuning" }
+            ]
+          },
+          {
+            id: "displays",
+            icon: "fa-solid fa-display",
+            title: "Displays, Scaling & Nightlight",
+            sub: "omarchy.monitor + Text Size Stops + Fractional Scaling + Hyprsunset",
+            badge: () => `${(STATE?.hyprland?.monitors || []).length} Mon`,
+            tabs: [
+              { id: "monitors", icon: "fa-solid fa-desktop", label: "Monitors, Scale & Text Size" },
+              { id: "nightlight", icon: "fa-solid fa-moon", label: "Hyprsunset Nightlight & Brightness" }
+            ]
+          },
+          {
+            id: "compositor",
+            icon: "fa-solid fa-layer-group",
+            title: "Hyprland & Liquid Glass",
+            sub: "looknfeel.lua + Hyprglass Shader + Blur + Opacity + Window Rules",
+            badge: () => `${STATE?.hyprland?.look?.rounding ?? 14}px`,
+            tabs: [
+              { id: "geometry", icon: "fa-solid fa-border-all", label: "Tiling Gaps, Borders & Opacity" },
+              { id: "blur", icon: "fa-solid fa-droplet", label: "Dual-Kawase Blur & Shadows" },
+              { id: "hyprglass", icon: "fa-solid fa-gem", label: "Hyprglass Liquid Glass Shader" }
+            ]
+          },
+          {
+            id: "input",
+            icon: "fa-solid fa-keyboard",
+            title: "Input, Touchpad & Keybindings",
+            sub: "input.lua + bindings.lua + Keyboard Layouts + Trackpad Reset",
+            badge: () => `${(STATE?.hyprland?.bindings || []).length} Keys`,
+            tabs: [
+              { id: "mouse", icon: "fa-solid fa-computer-mouse", label: "Mouse, Touchpad & Keyboard Repeat" },
+              { id: "bindings", icon: "fa-solid fa-terminal", label: "Hyprland Keybindings Table" }
+            ]
+          }
+        ]
+      },
+      {
+        group: "Top Bar, Dynamic Island & Alerts",
+        items: [
+          {
+            id: "topbar",
+            icon: "fa-solid fa-window-maximize",
+            title: "Top Bar, Island & Notifications",
+            sub: "shell.json + Dynamic Island + jovibe.notify-center + Pomodoro + AI Agents",
+            badge: () => STATE?.shell?.notifications?.config?.dnd ? "DND" : "Live",
+            tabs: [
+              { id: "island", icon: "fa-solid fa-capsules", label: "Dynamic Island (All 20+ Settings)" },
+              { id: "notify", icon: "fa-solid fa-bell", label: "Notification Center & DND" },
+              { id: "barlayout", icon: "fa-solid fa-table-columns", label: "Top Bar Widgets & Plugins" },
+              { id: "pomo_agents", icon: "fa-solid fa-robot", label: "Pomodoro Timer & AI Agent Quotas" }
+            ]
+          },
+          {
+            id: "appearance",
+            icon: "fa-solid fa-palette",
+            title: "Themes, Fonts & Default Apps",
+            sub: "Omarchy Theme Engine + Monospace Fonts + xdg-settings Defaults",
+            badge: () => STATE?.shell?.currentTheme || "theme",
+            tabs: [
+              { id: "themes", icon: "fa-solid fa-swatchbook", label: "Omarchy System Themes" },
+              { id: "wallpapers", icon: "fa-solid fa-image", label: "Wallpaper & Lockscreen" },
+              { id: "fonts_apps", icon: "fa-solid fa-font", label: "Fonts & Default Applications" }
+            ]
+          }
+        ]
+      },
+      {
+        group: "Power, Purge, Security & OS",
+        items: [
+          {
+            id: "power",
+            icon: "fa-solid fa-bolt",
+            title: "Power & Super-Battery",
+            sub: "paulbob.super-battery Thresholds + Power Profiles + Idle/Sleep Timers",
+            badge: () => `${STATE?.system?.battery?.capacity ?? 100}%`,
+            tabs: [
+              { id: "superbattery", icon: "fa-solid fa-battery-half", label: "Super-Battery Charge Limit & Alerts" },
+              { id: "governor", icon: "fa-solid fa-gauge", label: "CPU Power Profiles, Idle & Session" }
+            ]
+          },
+          {
+            id: "optimize",
+            icon: "fa-solid fa-broom",
+            title: "System Optimization & Purge",
+            sub: "Purge RAM PageCache, Compact Zones, Flush Swap/ZRAM, Disk Speedtest",
+            badge: () => {
+              const m = STATE?.system?.memory;
+              return m ? `${(m.used / 1073741824).toFixed(1)}G` : "RAM";
+            },
+            tabs: [
+              { id: "purge", icon: "fa-solid fa-fire-flame-curved", label: "RAM, Swap, ZRAM & Cache Purge" },
+              { id: "storage", icon: "fa-solid fa-hard-drive", label: "NVMe/Btrfs Disks & Speedtest" }
+            ]
+          },
+          {
+            id: "security",
+            icon: "fa-solid fa-lock",
+            title: "Cyber Security, LUKS2 & Updates",
+            sub: "Firewall, LUKS2 Encryption, SSHD, Auth, Channels, Timezone & Restarts",
+            badge: () => STATE?.system?.omarchy?.channel || "stable",
+            tabs: [
+              { id: "cyber", icon: "fa-solid fa-user-shield", label: "Firewall, LUKS2, SSHD & Biometrics" },
+              { id: "updates", icon: "fa-solid fa-arrows-rotate", label: "Updates, Timezone & Subsystem Restarts" }
+            ]
+          }
+        ]
+      }
+    ];
+
+    function fmtBytes(b) {
+      const n = Number(b || 0);
+      if (n >= 1073741824) return (n / 1073741824).toFixed(2) + " GiB";
+      if (n >= 1048576) return (n / 1048576).toFixed(1) + " MiB";
+      if (n >= 1024) return (n / 1024).toFixed(1) + " KiB";
+      return n + " B";
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById("toast");
+      document.getElementById("toast-msg").textContent = msg;
+      t.style.display = "flex";
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => { t.style.display = "none"; }, 3800);
+    }
+
+    async function apiAction(action, data = {}) {
+      showToast(`Executing ${action}...`);
+      try {
+        const res = await fetch("/api/action", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action, ...data })
+        });
+        const j = await res.json();
+        showToast(j.message || (j.ok ? "Done" : "Failed"));
+        await refreshState();
+        return j;
+      } catch (e) {
+        showToast("Error: " + e.message);
+      }
+    }
+
+    async function refreshState() {
+      try {
+        const res = await fetch("/api/state");
+        STATE = await res.json();
+        updateTopBarSummary();
+        renderSidebar(document.getElementById("nav-search").value);
+        renderMainPane();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function updateTopBarSummary() {
+      if (!STATE) return;
+      const conn = (STATE.network?.networks || []).find(n => n.connected);
+      document.querySelector("#top-wifi span").textContent = conn ? `${conn.ssid} (${conn.signal}%)` : "Disconnected";
+      document.querySelector("#top-bt span").textContent = STATE.bluetooth?.enabled ? "BT On" : "BT Off";
+      document.querySelector("#top-audio span").textContent = `${STATE.audio?.volume ?? 0}%${STATE.audio?.muted ? " (Muted)" : ""}`;
+      document.querySelector("#top-bat span").textContent = `${STATE.system?.battery?.capacity ?? 100}% · ${STATE.system?.battery?.status || ""}`;
+      const mem = STATE.system?.memory;
+      if (mem) {
+        document.querySelector("#top-ram span").textContent = `${(mem.used / 1073741824).toFixed(1)} / ${(mem.total / 1073741824).toFixed(1)} GiB`;
+      }
+    }
+
+    function selectCategory(catId, tabId = null) {
+      ACTIVE_CAT = catId;
+      const cat = findCat(catId);
+      ACTIVE_TAB = tabId || (cat?.tabs?.[0]?.id || "");
+      renderSidebar(document.getElementById("nav-search").value);
+      renderMainPane();
+    }
+
+    function findCat(catId) {
+      for (const g of CATEGORIES) {
+        for (const it of g.items) {
+          if (it.id === catId) return it;
+        }
+      }
+      return CATEGORIES[0].items[0];
+    }
+
+    function filterNav(query) {
+      renderSidebar(query);
+    }
+
+    function renderSidebar(query = "") {
+      const q = (query || "").toLowerCase().trim();
+      const box = document.getElementById("nav-list");
+      let html = "";
+      for (const g of CATEGORIES) {
+        const matched = g.items.filter(it =>
+          !q ||
+          it.title.toLowerCase().includes(q) ||
+          it.sub.toLowerCase().includes(q) ||
+          it.tabs.some(t => t.label.toLowerCase().includes(q))
+        );
+        if (!matched.length) continue;
+        html += `<div class="nav-group-label">${g.group}</div>`;
+        for (const it of matched) {
+          const active = it.id === ACTIVE_CAT ? "active" : "";
+          const badge = STATE ? it.badge() : "";
+          html += `
+            <div class="nav-item ${active}" onclick="selectCategory('${it.id}')">
+              <div class="nav-item-left">
+                <i class="${it.icon}"></i>
+                <span>${it.title}</span>
+              </div>
+              <span class="nav-badge">${badge}</span>
+            </div>`;
+        }
+      }
+      box.innerHTML = html;
+    }
+
+    function renderMainPane() {
+      if (!STATE) return;
+      const cat = findCat(ACTIVE_CAT);
+      document.getElementById("pane-title").innerHTML = `<i class="${cat.icon}"></i> <span>${cat.title}</span>`;
+      document.getElementById("pane-subtitle").textContent = cat.sub;
+
+      // Subtabs
+      const tabsBar = document.getElementById("subtabs-bar");
+      tabsBar.innerHTML = cat.tabs.map(t => `
+        <div class="subtab ${t.id === ACTIVE_TAB ? 'active' : ''}" onclick="selectCategory('${cat.id}', '${t.id}')">
+          <i class="${t.icon}"></i> <span>${t.label}</span>
+        </div>
+      `).join("");
+
+      const body = document.getElementById("pane-body");
+      body.innerHTML = renderTabContent(ACTIVE_CAT, ACTIVE_TAB);
+    }
+
+    function renderTabContent(cat, tab) {
+      // =====================================================================
+      // 1. NETWORK, WI-FI, HOTSPOT, WARP, TAILSCALE
+      // =====================================================================
+      if (cat === "network" && tab === "wifi") {
+        const nets = STATE.network?.networks || [];
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-wifi"></i> Wi-Fi Networks & Per-SSID Hardware Controls</div>
+                <div class="card-desc">Every setting from Top Bar (haris.network) + KDE NetworkManager: Connect, Forget, Auto-Connect, Change Password, Band Pinning (2.4/5/6 GHz), Priority, MTU, MAC & IPv4</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn btn-primary" onclick="apiAction('wifi.scan')"><i class="fa-solid fa-satellite-dish"></i> Rescan Radio</button>
+                <button class="btn" onclick="apiAction('restart.service', {service:'wifi'})"><i class="fa-solid fa-rotate"></i> Restart iwlwifi</button>
+              </div>
+            </div>
+            ${nets.map(n => {
+              const isExp = EXPANDED_SSID === n.ssid;
+              const safeId = n.ssid.replace(/[^a-zA-Z0-9]/g, "_");
+              return `
+                <div class="setting-row" style="flex-direction:column; align-items:stretch;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                    <div class="setting-info">
+                      <div class="setting-label">
+                        <i class="fa-solid fa-wifi" style="color:${n.connected ? 'var(--green)' : 'var(--accent)'}"></i>
+                        ${n.ssid}
+                        ${n.connected ? '<span class="pill pill-ok">Connected</span>' : ''}
+                        ${n.known && !n.connected ? '<span class="pill pill-neutral">Saved Profile</span>' : ''}
+                      </div>
+                      <div class="setting-sub mono">
+                        Signal: ${n.signal}% · ${n.freq} (Ch ${n.channel}) · ${n.rate} · Security: ${n.security} · BSSID: ${n.bssid || 'Auto'}
+                        ${n.ipAddress ? ` · IP: ${n.ipAddress}` : ''}
+                      </div>
+                    </div>
+                    <div class="setting-controls">
+                      ${n.known ? `
+                        <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--fg-dim)">
+                          Auto
+                          <label class="switch">
+                            <input type="checkbox" ${n.autoconnect ? 'checked' : ''} onchange="apiAction('wifi.autoconnect', {ssid:'${n.ssid.replace(/'/g,"\\'")}', enabled:this.checked})" />
+                            <span class="slider"></span>
+                          </label>
+                        </label>
+                        <select class="select btn-sm" onchange="apiAction('wifi.band', {ssid:'${n.ssid.replace(/'/g,"\\'")}', band:this.value})">
+                          <option value="auto" ${n.band === 'auto' ? 'selected' : ''}>Band: Auto</option>
+                          <option value="5" ${n.band === '5' ? 'selected' : ''}>Band: 5 GHz</option>
+                          <option value="2.4" ${n.band === '2.4' ? 'selected' : ''}>Band: 2.4 GHz</option>
+                        </select>
+                      ` : ''}
+                      <button class="btn btn-sm" onclick="EXPANDED_SSID = (EXPANDED_SSID === '${n.ssid.replace(/'/g,"\\'")}' ? '' : '${n.ssid.replace(/'/g,"\\'")}'); renderMainPane()">
+                        <i class="fa-solid fa-sliders"></i> ${isExp ? 'Hide Details' : 'Configure / Password'}
+                      </button>
+                      ${n.connected
+                        ? `<button class="btn btn-sm" onclick="apiAction('wifi.disconnect', {ssid:'${n.ssid.replace(/'/g,"\\'")}'})">Disconnect</button>`
+                        : `<button class="btn btn-sm btn-primary" onclick="apiAction('wifi.connect', {ssid:'${n.ssid.replace(/'/g,"\\'")}'})">Connect</button>`
+                      }
+                      ${n.known
+                        ? `<button class="btn btn-sm btn-danger" onclick="apiAction('wifi.forget', {ssid:'${n.ssid.replace(/'/g,"\\'")}'})"><i class="fa-solid fa-trash"></i> Forget</button>`
+                        : ''
+                      }
+                    </div>
+                  </div>
+                  ${isExp ? `
+                    <div class="expand-box">
+                      <div class="grid-3">
+                        <div>
+                          <div class="setting-sub" style="margin-bottom:4px">WPA2/WPA3 Pre-Shared Key (Password)</div>
+                          <div style="display:flex;gap:6px">
+                            <input type="password" id="pw_${safeId}" class="input" style="flex:1" placeholder="Enter new or existing password..." />
+                            <button class="btn btn-sm" onclick="const el=document.getElementById('pw_${safeId}'); el.type = el.type==='password'?'text':'password'"><i class="fa-solid fa-eye"></i></button>
+                            <button class="btn btn-sm btn-primary" onclick="apiAction('${n.known ? 'wifi.password' : 'wifi.connect'}', {ssid:'${n.ssid.replace(/'/g,"\\'")}', password:document.getElementById('pw_${safeId}').value})">Save & Connect</button>
+                          </div>
+                        </div>
+                        <div>
+                          <div class="setting-sub" style="margin-bottom:4px">Auto-Connect Priority & MTU</div>
+                          <div style="display:flex;gap:6px">
+                            <input type="number" id="prio_${safeId}" class="input" style="width:80px" value="${n.priority}" title="Priority" />
+                            <input type="text" id="mtu_${safeId}" class="input" style="width:90px" value="${n.mtu}" placeholder="MTU (auto)" />
+                            <input type="text" id="mac_${safeId}" class="input" style="flex:1" value="${n.clonedMac}" placeholder="Cloned MAC (preserve/random)" />
+                          </div>
+                        </div>
+                        <div>
+                          <div class="setting-sub" style="margin-bottom:4px">IPv4 Configuration (${n.ipMethod})</div>
+                          <div style="display:flex;gap:6px">
+                            <select id="ipm_${safeId}" class="select">
+                              <option value="auto" ${n.ipMethod==='auto'?'selected':''}>DHCP (Auto)</option>
+                              <option value="manual" ${n.ipMethod==='manual'?'selected':''}>Static Manual</option>
+                            </select>
+                            <input type="text" id="ipa_${safeId}" class="input" style="flex:1" value="${n.ipAddress}" placeholder="192.168.1.50/24" />
+                            <button class="btn btn-sm btn-primary" onclick="apiAction('wifi.advanced', {
+                              ssid:'${n.ssid.replace(/'/g,"\\'")}',
+                              priority:document.getElementById('prio_${safeId}').value,
+                              mtu:document.getElementById('mtu_${safeId}').value,
+                              clonedMac:document.getElementById('mac_${safeId}').value,
+                              ipMethod:document.getElementById('ipm_${safeId}').value,
+                              ipAddress:document.getElementById('ipa_${safeId}').value
+                            })">Apply Profile</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `;
+      }
+
+      if (cat === "network" && tab === "hotspot") {
+        const hs = STATE.network?.hotspot || {};
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-tower-broadcast"></i> Omarchy Wi-Fi Hotspot & Sharing (omhotspot)</div>
+                <div class="card-desc">Directly wired to ~/.config/omarchy/plugins/haris.network/Sharing.qml & network-control.py</div>
+              </div>
+              <span class="pill ${hs.active ? 'pill-ok' : 'pill-neutral'}">${hs.active ? `Active · ${hs.ssid} · ${hs.band || '2.4'} GHz` : 'Hotspot Off'}</span>
+            </div>
+            <div class="grid-2">
+              <div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">Hotspot SSID Name</div>
+                    <div class="setting-sub">Broadcast name on virtual AP interface (omhotspot)</div>
+                  </div>
+                  <input type="text" id="hs_ssid" class="input" value="${hs.ssid || 'Omarchy'}" />
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">WPA2 Passphrase</div>
+                    <div class="setting-sub">Leave blank to keep saved password (min 8 chars)</div>
+                  </div>
+                  <div class="setting-controls">
+                    <input type="password" id="hs_pw" class="input" placeholder="Saved password" />
+                    <button class="btn btn-sm" onclick="const p=document.getElementById('hs_pw'); p.type=p.type==='password'?'text':'password'"><i class="fa-solid fa-eye"></i></button>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">Radio Frequency Band</div>
+                    <div class="setting-sub">Intel AX211 concurrent STA+AP works best matching upstream channel or 2.4 GHz</div>
+                  </div>
+                  <select id="hs_band" class="select">
+                    <option value="2.4" ${hs.band === '2.4' ? 'selected' : ''}>2.4 GHz — Wide compatibility</option>
+                    <option value="5" ${hs.band === '5' ? 'selected' : ''}>5 GHz — High throughput</option>
+                  </select>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">Hotspot Control</div>
+                  </div>
+                  <div class="setting-controls">
+                    <button class="btn btn-primary" onclick="apiAction('hotspot.toggle', {enabled:true, ssid:document.getElementById('hs_ssid').value, password:document.getElementById('hs_pw').value, band:document.getElementById('hs_band').value})">
+                      <i class="fa-solid fa-play"></i> ${hs.active ? 'Apply & Restart Hotspot' : 'Start Hotspot'}
+                    </button>
+                    ${hs.active ? `<button class="btn btn-danger" onclick="apiAction('hotspot.toggle', {enabled:false})"><i class="fa-solid fa-stop"></i> Stop Hotspot</button>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="expand-box">
+                <div class="card-title" style="margin-bottom:8px"><i class="fa-solid fa-chart-line"></i> Live AP Telemetry & Routing</div>
+                <div class="setting-row"><span class="setting-sub">Connected Clients</span><span class="mono">${hs.clients ?? 0} devices</span></div>
+                <div class="setting-row"><span class="setting-sub">Data Sent to Clients (TX)</span><span class="mono">${fmtBytes(hs.tx_bytes || 0)}</span></div>
+                <div class="setting-row"><span class="setting-sub">Data Received from Clients (RX)</span><span class="mono">${fmtBytes(hs.rx_bytes || 0)}</span></div>
+                <div class="setting-row"><span class="setting-sub">Upstream Route Mode</span><span class="pill pill-ok">${hs.route_mode || 'Direct NAT'}</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      if (cat === "network" && tab === "vpn") {
+        const hs = STATE.network?.hotspot || {};
+        const vpns = hs.vpns || STATE.network?.vpns || [];
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-cloud-bolt"></i> Cloudflare WARP & WireGuard Tunnel Manager</div>
+                <div class="card-desc">Directly mirrors Top Bar Sharing.qml VPN tab: MASQUE / MASQUE-TCP / WireGuard protocol switcher & ProtonVPN .conf importer</div>
+              </div>
+              <span class="pill ${hs.warp_status === 'Connected' ? 'pill-ok' : 'pill-neutral'}">WARP: ${hs.warp_status || 'Disconnected'} · ${hs.warp_protocol || 'MASQUE'}</span>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Cloudflare WARP Tunnel Protocol</div>
+                <div class="setting-sub">Switch between MASQUE (QUIC/UDP), MASQUE-TCP (Fallback), or WireGuard</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn ${hs.warp_protocol === 'MASQUE' ? 'btn-primary' : ''}" onclick="apiAction('warp.protocol', {protocol:'MASQUE'})">Automatic (MASQUE)</button>
+                <button class="btn ${hs.warp_protocol === 'MASQUE-TCP' ? 'btn-primary' : ''}" onclick="apiAction('warp.protocol', {protocol:'MASQUE-TCP'})">TCP Fallback</button>
+                <button class="btn ${hs.warp_protocol === 'WireGuard' ? 'btn-primary' : ''}" onclick="apiAction('warp.protocol', {protocol:'WireGuard'})">WireGuard</button>
+                <button class="btn btn-danger" onclick="apiAction('vpn.toggle', {uuid:'warp', enabled:false})">Disconnect WARP / Restore Direct</button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Import WireGuard / ProtonVPN Configuration (.conf)</div>
+                <div class="setting-sub">Imports directly into NetworkManager and sets routing priority</div>
+              </div>
+              <div class="setting-controls">
+                <input type="text" id="wg_conf_path" class="input mono" style="width:280px" placeholder="/home/haris/Downloads/proton.conf" />
+                <button class="btn btn-primary" onclick="apiAction('vpn.import', {path:document.getElementById('wg_conf_path').value})"><i class="fa-solid fa-file-import"></i> Import .conf</button>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i class="fa-solid fa-shield-halved"></i> Configured VPN Profiles</div>
+            </div>
+            ${vpns.map(v => `
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">${v.name}</div>
+                  <div class="setting-sub mono">UUID: ${v.uuid}</div>
+                </div>
+                <div class="setting-controls">
+                  <span class="pill ${v.active ? 'pill-ok' : 'pill-neutral'}">${v.active ? 'Active Tunnel' : 'Standby'}</span>
+                  <button class="btn ${v.active ? 'btn-danger' : 'btn-primary'}" onclick="apiAction('vpn.toggle', {uuid:'${v.uuid}', enabled:${!v.active}})">
+                    ${v.active ? 'Disconnect' : 'Connect Tunnel'}
+                  </button>
+                </div>
+              </div>
+            `).join("") || '<div class="setting-sub">No VPN profiles found.</div>'}
+          </div>
+        `;
+      }
+
+      if (cat === "network" && tab === "tailscale") {
+        const ts = STATE.network?.tailscale || {};
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-diagram-project"></i> Tailscale Mesh VPN (omarchy.tailscale Top Bar Panel)</div>
+                <div class="card-desc">Manage Tailnet connection, MagicDNS (${ts.magicDns || 'N/A'}), Peers & Exit Nodes</div>
+              </div>
+              <div class="setting-controls">
+                <span class="pill ${ts.active ? 'pill-ok' : 'pill-neutral'}">${ts.backendState || (ts.active ? 'Running' : 'Stopped')}</span>
+                <button class="btn ${ts.active ? 'btn-danger' : 'btn-primary'}" onclick="apiAction('tailscale.toggle', {enabled:${!ts.active}})">
+                  ${ts.active ? 'Disconnect Tailscale' : 'Connect Tailscale'}
+                </button>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">This Machine (${ts.self?.hostName || 'local'})</div>
+                <div class="setting-sub mono">DNS: ${ts.self?.dnsName || '—'} · IPs: ${(ts.self?.ips || []).join(', ') || '—'}</div>
+              </div>
+              <div class="setting-controls">
+                ${ts.exitNode ? `<button class="btn btn-danger btn-sm" onclick="apiAction('tailscale.exitnode', {node:''})">Clear Exit Node (${ts.exitNode})</button>` : ''}
+              </div>
+            </div>
+            <table class="table" style="margin-top:10px">
+              <thead><tr><th>Peer Hostname</th><th>Tailscale IP</th><th>OS</th><th>Status</th><th>Exit Node</th></tr></thead>
+              <tbody>
+                ${(ts.peers || []).map(p => `
+                  <tr>
+                    <td class="mono"><strong>${p.hostName}</strong><br><span style="color:var(--fg-dim);font-size:11px">${p.dnsName}</span></td>
+                    <td class="mono">${(p.ips || []).join('<br>')}</td>
+                    <td>${p.os}</td>
+                    <td><span class="pill ${p.online ? 'pill-ok' : 'pill-neutral'}">${p.online ? 'Online' : 'Offline'}</span></td>
+                    <td>
+                      ${p.exitNodeOption ? `
+                        <button class="btn btn-sm ${p.exitNode ? 'btn-primary' : ''}" onclick="apiAction('tailscale.exitnode', {node:'${p.exitNode ? '' : p.hostName}'})">
+                          ${p.exitNode ? 'Active Exit Node' : 'Use as Exit Node'}
+                        </button>
+                      ` : '<span class="setting-sub">—</span>'}
+                    </td>
+                  </tr>
+                `).join("") || '<tr><td colspan="5" class="setting-sub">No peers visible or Tailscale offline.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      if (cat === "network" && tab === "dns") {
+        const curDns = STATE.network?.dns || "DHCP";
+        return `
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-server"></i> System DNS Resolver (omarchy-dns)</div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Active DNS Provider</div>
+                  <div class="setting-sub">Configures systemd-resolved / NetworkManager global DNS</div>
+                </div>
+                <div class="setting-controls">
+                  ${["DHCP", "Cloudflare", "Google", "Quad9"].map(p => `
+                    <button class="btn btn-sm ${curDns.toLowerCase().includes(p.toLowerCase()) ? 'btn-primary' : ''}" onclick="apiAction('dns.set', {provider:'${p}'})">${p}</button>
+                  `).join("")}
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Live Network Throughput Test</div>
+                  <div class="setting-sub">Runs omarchy-network-speedtest (Cloudflare speedtest)</div>
+                </div>
+                <button class="btn btn-primary" onclick="apiAction('wifi.speedtest')"><i class="fa-solid fa-gauge-high"></i> Run Speedtest</button>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-network-wired"></i> Verbose Interface & Route Status</div>
+              </div>
+              <pre class="mono" style="font-size:11.5px; color:var(--fg-dim); white-space:pre-wrap;">${STATE.network?.details || ''}</pre>
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 2. BLUETOOTH
+      // =====================================================================
+      if (cat === "bluetooth") {
+        const bt = STATE.bluetooth || {};
+        if (tab === "adapter") {
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-microchip"></i> BlueZ Controller & Visibility</div></div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Bluetooth Controller Power</div><div class="setting-sub">Adapter: ${bt.adapterAlias}</div></div>
+                <label class="switch"><input type="checkbox" ${bt.enabled ? 'checked' : ''} onchange="apiAction('bt.power', {enabled:this.checked})" /><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Discoverable Mode</div><div class="setting-sub">Allow nearby Bluetooth devices to see this laptop</div></div>
+                <label class="switch"><input type="checkbox" ${bt.discoverable ? 'checked' : ''} onchange="apiAction('bt.discoverable', {enabled:this.checked})" /><span class="slider"></span></label>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Restart Bluetooth Stack</div><div class="setting-sub">Runs omarchy-restart-bluetooth</div></div>
+                <button class="btn" onclick="apiAction('restart.service', {service:'bluetooth'})"><i class="fa-solid fa-rotate"></i> Restart BlueZ</button>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-brands fa-bluetooth-b"></i> Bluetooth Devices (io.github.hugorolimf.bluetooth)</div>
+                <div class="card-desc">Connect, Disconnect, Pair, Trust, Block & Battery Telemetry</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn btn-primary" onclick="apiAction('bt.scan')"><i class="fa-solid fa-radar"></i> Scan for Devices</button>
+                <label class="switch"><input type="checkbox" ${bt.enabled ? 'checked' : ''} onchange="apiAction('bt.power', {enabled:this.checked})" /><span class="slider"></span></label>
+              </div>
+            </div>
+            ${(bt.devices || []).map(d => `
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">
+                    <i class="fa-solid fa-headphones" style="color:${d.connected ? 'var(--green)' : 'var(--accent)'}"></i>
+                    ${d.name}
+                    ${d.connected ? '<span class="pill pill-ok">Connected</span>' : ''}
+                    ${d.paired && !d.connected ? '<span class="pill pill-neutral">Paired</span>' : ''}
+                    ${d.battery !== null ? `<span class="pill pill-ok"><i class="fa-solid fa-battery-three-quarters"></i> ${d.battery}%</span>` : ''}
+                  </div>
+                  <div class="setting-sub mono">MAC: ${d.address} · Trusted: ${d.trusted ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="setting-controls">
+                  ${d.connected
+                    ? `<button class="btn btn-sm" onclick="apiAction('bt.device', {sub:'disconnect', address:'${d.address}'})">Disconnect</button>`
+                    : `<button class="btn btn-sm btn-primary" onclick="apiAction('bt.device', {sub:'connect', address:'${d.address}'})">Connect</button>`
+                  }
+                  <button class="btn btn-sm" onclick="apiAction('bt.device', {sub:'${d.trusted ? 'untrust' : 'trust'}', address:'${d.address}'})">${d.trusted ? 'Untrust' : 'Trust'}</button>
+                  <button class="btn btn-sm btn-danger" onclick="apiAction('bt.device', {sub:'remove', address:'${d.address}'})"><i class="fa-solid fa-trash"></i></button>
+                </div>
+              </div>
+            `).join("") || '<div class="setting-sub">No Bluetooth devices found.</div>'}
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 3. CLOUD SYNC: GLASS DRIVE & ICLOUD DRIVE
+      // =====================================================================
+      if (cat === "cloud") {
+        const gd = STATE.cloud?.glassDrive || {};
+        const ic = STATE.cloud?.icloud || {};
+        if (tab === "icloud") {
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-brands fa-apple"></i> iCloud Drive & Rclone FUSE Manager</div>
+                  <div class="card-desc">Mount iCloud Drive & Rclone remotes with VFS write caching</div>
+                </div>
+                <span class="pill ${ic.mounted ? 'pill-ok' : 'pill-neutral'}">${ic.mounted ? 'Mounted' : 'Unmounted'}</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">iCloud Drive Local Mount Path</div>
+                  <div class="setting-sub mono">${ic.path} · Apple iCloud CLI installed: ${ic.cliInstalled ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="setting-controls">
+                  <button class="btn btn-primary" onclick="apiAction('icloud.mount', {remote:'icloud:'})"><i class="fa-solid fa-folder-plus"></i> Mount iCloud Drive</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Configured Rclone Cloud Remotes</div>
+                  <div class="setting-sub mono">${(STATE.cloud?.rcloneRemotes || []).join(', ') || 'No remotes found'}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        const accts = gd.accounts || [];
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-brands fa-google-drive"></i> Glass Drive Native Engine (haris.glass-drive Top Bar)</div>
+                <div class="card-desc">Directly controls ${gd.mountRoot || '/home/haris/GlassDrive'} · OAuth Configured: ${gd.oauthConfigured ? 'Yes' : 'No'}</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn btn-primary" onclick="apiAction('glass.cmd', {args:['login']})"><i class="fa-solid fa-user-plus"></i> Add Google Account</button>
+                <button class="btn" onclick="apiAction('glass.cmd', {args:['sync-all']})"><i class="fa-solid fa-arrows-rotate"></i> Sync All Pins</button>
+              </div>
+            </div>
+            ${accts.map(a => {
+              const used = a.quota?.used || 0;
+              const tot = a.quota?.total || 1;
+              const pct = Math.min(100, Math.round((used / tot) * 100));
+              return `
+                <div class="expand-box" style="margin-bottom:10px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                      <div class="setting-label">${a.displayName || a.email} <span class="mono" style="color:var(--fg-dim)">(${a.email})</span></div>
+                      <div class="setting-sub mono">Mount: ${a.mountpoint} · Cache: ${fmtBytes(a.cacheBytes)} · Mode: ${a.readOnly ? 'Read-Only' : 'Read-Write'}</div>
+                    </div>
+                    <div class="setting-controls">
+                      <span class="pill ${a.mounted ? 'pill-ok' : 'pill-warn'}">${a.mounted ? 'FUSE Mounted' : 'Unmounted'}</span>
+                      <button class="btn btn-sm" onclick="apiAction('glass.cmd', {args:['${a.mounted ? 'unmount' : 'mount'}', '${a.id}']})">${a.mounted ? 'Unmount' : 'Mount'}</button>
+                      <button class="btn btn-sm" onclick="apiAction('glass.cmd', {args:['mode', '${a.id}', '${a.readOnly ? 'rw' : 'ro'}']})">${a.readOnly ? 'Make RW' : 'Lock RO'}</button>
+                      <button class="btn btn-sm" onclick="apiAction('glass.cmd', {args:['clear-cache', '${a.id}']})">Purge Cache</button>
+                    </div>
+                  </div>
+                  <div style="margin-top:8px">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--fg-dim)">
+                      <span>Google Drive Storage Quota</span>
+                      <span class="mono">${fmtBytes(used)} / ${fmtBytes(tot)} (${pct}%)</span>
+                    </div>
+                    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+                  </div>
+                </div>
+              `;
+            }).join("") || '<div class="setting-sub">No Google Drive accounts linked yet.</div>'}
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 4. AUDIO, PIPEWIRE, STREAMS, MPRIS, EASYEFFECTS
+      // =====================================================================
+      if (cat === "audio") {
+        const au = STATE.audio || {};
+        if (tab === "outputs") {
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-solid fa-volume-high"></i> Master Output & 150% Overdrive Boost (io.github.kingokeke.audio-boost)</div>
+                  <div class="card-desc">PipeWire / WirePlumber default sink volume with overdrive up to 150%</div>
+                </div>
+                <span class="pill ${au.muted ? 'pill-warn' : 'pill-ok'}">${au.volume}% ${au.muted ? '(Muted)' : ''}</span>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Master Output Volume (0% – 150% Boost)</div>
+                  <div class="setting-sub mono">Default Sink: ${au.defaultSink}</div>
+                </div>
+                <div class="setting-controls">
+                  <input type="range" min="0" max="150" value="${au.volume}" onchange="apiAction('audio.volume', {value:this.value})" />
+                  <span class="mono" style="width:45px">${au.volume}%</span>
+                  <button class="btn btn-sm ${au.muted ? 'btn-danger' : ''}" onclick="apiAction('audio.mute')">
+                    <i class="fa-solid ${au.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i> ${au.muted ? 'Unmute' : 'Mute'}
+                  </button>
+                </div>
+              </div>
+              ${(au.sinks || []).map(s => `
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">${s.description} ${s.default ? '<span class="pill pill-ok">Default Output</span>' : ''}</div>
+                    <div class="setting-sub mono">${s.name} · Port: ${s.activePort || 'default'}</div>
+                  </div>
+                  <div class="setting-controls">
+                    <span class="mono">${s.volume}%</span>
+                    ${!s.default ? `<button class="btn btn-sm btn-primary" onclick="apiAction('audio.sink', {name:'${s.name}'})">Set Default</button>` : ''}
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `;
+        }
+        if (tab === "inputs") {
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-microphone"></i> Microphone & Input Sources</div></div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Default Microphone Gain</div><div class="setting-sub mono">${au.defaultSource}</div></div>
+                <div class="setting-controls">
+                  <input type="range" min="0" max="150" value="${au.micVolume}" onchange="apiAction('audio.mic_volume', {value:this.value})" />
+                  <span class="mono" style="width:45px">${au.micVolume}%</span>
+                  <button class="btn btn-sm ${au.micMuted ? 'btn-danger' : ''}" onclick="apiAction('audio.mic_mute')">${au.micMuted ? 'Unmute Mic' : 'Mute Mic'}</button>
+                </div>
+              </div>
+              ${(au.sources || []).map(s => `
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">${s.description} ${s.default ? '<span class="pill pill-ok">Default Input</span>' : ''}</div>
+                    <div class="setting-sub mono">${s.name}</div>
+                  </div>
+                  ${!s.default ? `<button class="btn btn-sm btn-primary" onclick="apiAction('audio.source', {name:'${s.name}'})">Set Default</button>` : ''}
+                </div>
+              `).join("")}
+            </div>
+          `;
+        }
+        if (tab === "streams") {
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-wave-square"></i> Per-Application Audio Streams (PipeWire Sink-Inputs)</div></div>
+              ${(au.streams || []).map(st => `
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">${st.app}</div>
+                    <div class="setting-sub">${st.media} (Stream #${st.id})</div>
+                  </div>
+                  <div class="setting-controls">
+                    <input type="range" min="0" max="150" value="${st.volume}" onchange="apiAction('audio.stream_volume', {id:${st.id}, value:this.value})" />
+                    <span class="mono" style="width:42px">${st.volume}%</span>
+                    <button class="btn btn-sm ${st.mute ? 'btn-danger' : ''}" onclick="apiAction('audio.stream_mute', {id:${st.id}})">${st.mute ? 'Muted' : 'Mute'}</button>
+                  </div>
+                </div>
+              `).join("") || '<div class="setting-sub">No active application audio streams playing right now.</div>'}
+            </div>
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-music"></i> Active MPRIS Media Players</div></div>
+              ${(au.mpris || []).map(m => `
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">${m.title} <span class="pill pill-neutral">${m.status}</span></div>
+                    <div class="setting-sub">${m.artist} · Player: ${m.player}</div>
+                  </div>
+                  <div class="setting-controls">
+                    <button class="btn btn-sm" onclick="apiAction('audio.mpris', {player:'${m.player}', cmd:'previous'})"><i class="fa-solid fa-backward-step"></i></button>
+                    <button class="btn btn-sm btn-primary" onclick="apiAction('audio.mpris', {player:'${m.player}', cmd:'play-pause'})"><i class="fa-solid fa-play"></i> Play/Pause</button>
+                    <button class="btn btn-sm" onclick="apiAction('audio.mpris', {player:'${m.player}', cmd:'next'})"><i class="fa-solid fa-forward-step"></i></button>
+                  </div>
+                </div>
+              `).join("") || '<div class="setting-sub">No active MPRIS media sessions.</div>'}
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> EasyEffects DSP Studio & Laptop Speaker Tuning</div></div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Omarchy Laptop Speaker DSP Tuning (omarchy-audio-tuning)</div>
+                <div class="setting-sub">Hardware-calibrated convolver/EQ filter chain for internal speakers</div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" ${String(au.speakerTuning).includes('on') ? 'checked' : ''} onchange="apiAction('audio.tuning', {enabled:this.checked})" />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">EasyEffects PipeWire DSP Studio</div>
+                <div class="setting-sub">Parametric EQ, Bass Enhancer, Limiter, RNNoise & Convolver (${au.easyeffectsRunning ? 'Daemon Running' : 'Standby'})</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn btn-primary" onclick="apiAction('easyeffects.launch')"><i class="fa-solid fa-sliders"></i> Launch EasyEffects Studio</button>
+                <button class="btn" onclick="apiAction('restart.service', {service:'audio'})"><i class="fa-solid fa-rotate"></i> Restart PipeWire</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 5. DISPLAYS, SCALING, TEXT SIZE & NIGHTLIGHT
+      // =====================================================================
+      if (cat === "displays") {
+        const hp = STATE.hyprland || {};
+        if (tab === "nightlight") {
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-moon"></i> Hyprsunset Nightlight & Backlight Brightness</div></div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Hardware Backlight Brightness</div><div class="setting-sub">Controls internal eDP-1 & DDC/CI external monitors</div></div>
+                <div class="setting-controls">
+                  <input type="range" min="5" max="100" value="${hp.brightness}" onchange="apiAction('display.brightness', {value:this.value})" />
+                  <span class="mono">${hp.brightness}%</span>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Hyprsunset Blue-Light Filter (Nightlight)</div><div class="setting-sub">Warm color temperature shader for evening work</div></div>
+                <div class="setting-controls">
+                  <span class="pill ${hp.nightlight ? 'pill-ok' : 'pill-neutral'}">${hp.nightlight ? 'Active' : 'Off'}</span>
+                  <button class="btn btn-primary" onclick="apiAction('nightlight.toggle')">Toggle Nightlight</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-desktop"></i> Monitors, Fractional Scaling & Global Text Size (omarchy.monitor Top Bar)</div>
+                <div class="card-desc">Every control from the Top Bar Monitor popup + GNOME/KDE Display configuration</div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Global UI Text Size Stops (omarchy-display-text-size)</div>
+                <div class="setting-sub">Curated macOS-style stops that scale Quickshell bar, panels & fonts</div>
+              </div>
+              <div class="setting-controls">
+                ${(hp.textSizeStops || [9,10,11,12,14,16,20]).map(px => `
+                  <button class="btn btn-sm ${hp.textSize === px ? 'btn-primary' : ''}" onclick="apiAction('display.textsize', {size:${px}})">${px} px</button>
+                `).join("")}
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Monitor Fractional Scale Presets</div>
+                <div class="setting-sub">Applies live via omarchy-hyprland-monitor-scaling</div>
+              </div>
+              <div class="setting-controls">
+                ${(hp.scalePresets || ["1","1.25","1.6","2","3","4"]).map(sc => `
+                  <button class="btn btn-sm" onclick="apiAction('display.scale', {scale:'${sc}'})">${sc}x</button>
+                `).join("")}
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label">Multi-Monitor Clamshell & Mirroring</div>
+                <div class="setting-sub">Toggle internal laptop panel or mirror across external HDMI/DP</div>
+              </div>
+              <div class="setting-controls">
+                <button class="btn btn-sm" onclick="apiAction('display.internal', {enabled:true})">Enable Internal eDP</button>
+                <button class="btn btn-sm" onclick="apiAction('display.internal', {enabled:false})">Disable Internal eDP</button>
+                <button class="btn btn-sm" onclick="apiAction('display.mirror', {enabled:true})">Mirror Displays</button>
+                <button class="btn btn-sm" onclick="apiAction('display.mirror', {enabled:false})">Extend Displays</button>
+              </div>
+            </div>
+            ${(hp.monitors || []).map(m => `
+              <div class="expand-box">
+                <div class="setting-label">${m.name} — ${m.description || m.make} <span class="pill pill-ok">${m.width}x${m.height} @ ${Math.round(m.refreshRate)}Hz · Scale ${m.scale}x</span></div>
+                <div class="setting-sub mono">Workspace: ${m.activeWorkspace?.name || 1} · Position: ${m.x},${m.y} · VRR: ${m.vrr ? 'On' : 'Off'}</div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 6. HYPRLAND COMPOSITOR & LIQUID GLASS
+      // =====================================================================
+      if (cat === "compositor") {
+        const lk = STATE.hyprland?.look || {};
+        if (tab === "hyprglass") {
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-solid fa-gem"></i> Hyprglass Liquid Glass Shader Engine</div>
+                  <div class="card-desc">Live-tuned parameters for ~/.config/hypr/looknfeel.lua plugin.hyprglass</div>
+                </div>
+                <button class="btn btn-primary" onclick="apiAction('hyprglass.live', {
+                  preset: document.getElementById('hg_preset').value,
+                  specular_strength: document.getElementById('hg_spec').value,
+                  refraction_strength: document.getElementById('hg_refr').value,
+                  chromatic_aberration: document.getElementById('hg_chrom').value,
+                  fresnel_strength: document.getElementById('hg_fres').value,
+                  bevel_strength: document.getElementById('hg_bevel').value,
+                  lens_distortion: document.getElementById('hg_lens').value
+                })"><i class="fa-solid fa-bolt"></i> Apply Shader Live</button>
+              </div>
+              <div class="setting-row"><div class="setting-label">Shader Preset</div><select id="hg_preset" class="select"><option value="clear" ${lk.glass_preset==='clear'?'selected':''}>Clear Liquid Glass</option><option value="subtle" ${lk.glass_preset==='subtle'?'selected':''}>Subtle Frosted</option></select></div>
+              <div class="setting-row"><div class="setting-label">Specular Highlight Strength (${lk.specular_strength})</div><input type="range" id="hg_spec" min="0" max="1" step="0.05" value="${lk.specular_strength}" /></div>
+              <div class="setting-row"><div class="setting-label">Optical Refraction Strength (${lk.refraction_strength})</div><input type="range" id="hg_refr" min="0" max="1" step="0.05" value="${lk.refraction_strength}" /></div>
+              <div class="setting-row"><div class="setting-label">Chromatic Aberration Dispersion (${lk.chromatic_aberration})</div><input type="range" id="hg_chrom" min="0" max="1" step="0.05" value="${lk.chromatic_aberration}" /></div>
+              <div class="setting-row"><div class="setting-label">Fresnel Rim Glow (${lk.fresnel_strength})</div><input type="range" id="hg_fres" min="0" max="1" step="0.05" value="${lk.fresnel_strength}" /></div>
+              <div class="setting-row"><div class="setting-label">Edge Bevel Strength (${lk.bevel_strength})</div><input type="range" id="hg_bevel" min="0" max="1" step="0.05" value="${lk.bevel_strength}" /></div>
+              <div class="setting-row"><div class="setting-label">Curved Lens Distortion (${lk.lens_distortion})</div><input type="range" id="hg_lens" min="0" max="1" step="0.05" value="${lk.lens_distortion}" /></div>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-border-all"></i> Hyprland Window Tiling, Opacity & Blur</div>
+                <div class="card-desc">Evaluates live via hyprctl eval hl.config(...)</div>
+              </div>
+              <button class="btn btn-primary" onclick="apiAction('hyprland.live', {
+                gaps_in: document.getElementById('hl_gi').value,
+                gaps_out: document.getElementById('hl_go').value,
+                border_size: document.getElementById('hl_bs').value,
+                rounding: document.getElementById('hl_rd').value,
+                active_opacity: document.getElementById('hl_ao').value,
+                inactive_opacity: document.getElementById('hl_io').value,
+                blur_enabled: document.getElementById('hl_be').checked,
+                blur_size: document.getElementById('hl_bz').value,
+                blur_passes: document.getElementById('hl_bp').value
+              })"><i class="fa-solid fa-check"></i> Apply Live to Hyprland</button>
+            </div>
+            <div class="grid-2">
+              <div>
+                <div class="setting-row"><div class="setting-label">Inner Window Gaps (px)</div><input type="number" id="hl_gi" class="input" style="width:80px" value="${lk.gaps_in}" /></div>
+                <div class="setting-row"><div class="setting-label">Outer Screen Gaps (px)</div><input type="number" id="hl_go" class="input" style="width:80px" value="${lk.gaps_out}" /></div>
+                <div class="setting-row"><div class="setting-label">Window Border Thickness (px)</div><input type="number" id="hl_bs" class="input" style="width:80px" value="${lk.border_size}" /></div>
+                <div class="setting-row"><div class="setting-label">Corner Rounding Radius (px)</div><input type="number" id="hl_rd" class="input" style="width:80px" value="${lk.rounding}" /></div>
+              </div>
+              <div>
+                <div class="setting-row"><div class="setting-label">Active Window Opacity (${lk.active_opacity})</div><input type="range" id="hl_ao" min="0.5" max="1.0" step="0.02" value="${lk.active_opacity}" /></div>
+                <div class="setting-row"><div class="setting-label">Inactive Window Opacity (${lk.inactive_opacity})</div><input type="range" id="hl_io" min="0.4" max="1.0" step="0.02" value="${lk.inactive_opacity}" /></div>
+                <div class="setting-row"><div class="setting-label">Enable Dual-Kawase Blur</div><label class="switch"><input type="checkbox" id="hl_be" ${lk.blur_enabled ? 'checked' : ''} /><span class="slider"></span></label></div>
+                <div class="setting-row"><div class="setting-label">Blur Radius & Passes</div><div class="setting-controls"><input type="number" id="hl_bz" class="input" style="width:65px" value="${lk.blur_size}" /><input type="number" id="hl_bp" class="input" style="width:65px" value="${lk.blur_passes}" /></div></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 7. INPUT, TOUCHPAD & KEYBINDINGS
+      // =====================================================================
+      if (cat === "input") {
+        const inp = STATE.hyprland?.input || {};
+        if (tab === "bindings") {
+          const binds = STATE.hyprland?.bindings || [];
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-terminal"></i> Hyprland Keybindings Reference & Editor (~/.config/hypr/bindings.lua)</div></div>
+              <table class="table">
+                <thead><tr><th>Key Combination</th><th>Description</th><th>Dispatched Action</th></tr></thead>
+                <tbody>
+                  ${binds.map(b => `
+                    <tr>
+                      <td><span class="pill pill-ok mono">${b.keys}</span></td>
+                      <td>${b.desc}</td>
+                      <td class="mono" style="color:var(--fg-dim)">${b.action}</td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title"><i class="fa-solid fa-computer-mouse"></i> Mouse, Touchpad & Keyboard Repeat (~/.config/hypr/input.lua)</div></div>
+              <div class="setting-controls">
+                <button class="btn" onclick="apiAction('restart.service', {service:'trackpad'})"><i class="fa-solid fa-rotate"></i> Reset Trackpad Driver</button>
+                <button class="btn btn-primary" onclick="apiAction('input.live', {
+                  sensitivity: document.getElementById('in_sens').value,
+                  natural_scroll: document.getElementById('in_nat').checked,
+                  scroll_factor: document.getElementById('in_sf').value,
+                  disable_while_typing: document.getElementById('in_dwt').checked,
+                  repeat_rate: document.getElementById('in_rr').value,
+                  repeat_delay: document.getElementById('in_rd').value
+                })">Apply Live</button>
+              </div>
+            </div>
+            <div class="setting-row"><div class="setting-label">Pointer Sensitivity (-1.0 to 1.0)</div><input type="number" id="in_sens" step="0.1" class="input" style="width:90px" value="${inp.sensitivity}" /></div>
+            <div class="setting-row"><div class="setting-label">Touchpad Natural Scrolling</div><label class="switch"><input type="checkbox" id="in_nat" ${inp.natural_scroll ? 'checked' : ''} /><span class="slider"></span></label></div>
+            <div class="setting-row"><div class="setting-label">Touchpad Scroll Speed Factor</div><input type="number" id="in_sf" step="0.1" class="input" style="width:90px" value="${inp.scroll_factor}" /></div>
+            <div class="setting-row"><div class="setting-label">Disable Touchpad While Typing</div><label class="switch"><input type="checkbox" id="in_dwt" ${inp.disable_while_typing ? 'checked' : ''} /><span class="slider"></span></label></div>
+            <div class="setting-row"><div class="setting-label">Keyboard Repeat Rate (chars/sec) & Delay (ms)</div><div class="setting-controls"><input type="number" id="in_rr" class="input" style="width:75px" value="${inp.repeat_rate}" /><input type="number" id="in_rd" class="input" style="width:85px" value="${inp.repeat_delay}" /></div></div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 8. TOP BAR, DYNAMIC ISLAND, NOTIFICATIONS, POMODORO & AGENTS
+      // =====================================================================
+      if (cat === "topbar") {
+        const sh = STATE.shell || {};
+        if (tab === "island") {
+          const isl = sh.island || {};
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-solid fa-capsules"></i> Dynamic Island Complete Configuration (io.github.ofa14-prog.dynamic-island)</div>
+                  <div class="card-desc">Writes directly to ~/.config/omarchy/dynamic-island.json (FileView auto-reloads live in Quickshell)</div>
+                </div>
+                <button class="btn btn-primary" onclick="apiAction('island.save', {
+                  compactHeight: Number(document.getElementById('di_ch').value),
+                  topOffset: Number(document.getElementById('di_to').value),
+                  expandedWidth: Number(document.getElementById('di_ew').value),
+                  hoverExpand: document.getElementById('di_he').checked,
+                  hoverDelay: Number(document.getElementById('di_hd').value),
+                  collapseDelay: Number(document.getElementById('di_cd').value),
+                  idleClock: document.getElementById('di_ic').checked,
+                  clockFormat: document.getElementById('di_cf').value,
+                  glass: document.getElementById('di_gl').checked,
+                  glassOpacity: Number(document.getElementById('di_go').value),
+                  ambient: document.getElementById('di_am').checked,
+                  ambientAudio: document.getElementById('di_aa').checked,
+                  peekOnTrackChange: document.getElementById('di_pt').checked,
+                  peekOnAgentDone: document.getElementById('di_pa').checked,
+                  autoExpandPermission: document.getElementById('di_ap').checked,
+                  hideOnFullscreen: document.getElementById('di_hf').checked,
+                  reduceMotion: document.getElementById('di_rm').checked
+                })"><i class="fa-solid fa-floppy-disk"></i> Save & Hot-Reload Island</button>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <div class="setting-row"><div class="setting-label">Compact Pill Height (px)</div><input type="number" id="di_ch" class="input" style="width:85px" value="${isl.compactHeight === 'auto' ? 32 : isl.compactHeight}" /></div>
+                  <div class="setting-row"><div class="setting-label">Top Screen Offset (px)</div><input type="number" id="di_to" class="input" style="width:85px" value="${isl.topOffset === 'auto' ? 2 : isl.topOffset}" /></div>
+                  <div class="setting-row"><div class="setting-label">Expanded Card Width (px)</div><input type="number" id="di_ew" class="input" style="width:85px" value="${isl.expandedWidth}" /></div>
+                  <div class="setting-row"><div class="setting-label">Show Idle Clock in Island</div><label class="switch"><input type="checkbox" id="di_ic" ${isl.idleClock ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Idle Clock Date/Time Format</div><input type="text" id="di_cf" class="input mono" style="width:170px" value="${isl.clockFormat}" /></div>
+                  <div class="setting-row"><div class="setting-label">Expand on Pointer Hover</div><label class="switch"><input type="checkbox" id="di_he" ${isl.hoverExpand ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Hover Delay / Collapse Delay (ms)</div><div class="setting-controls"><input type="number" id="di_hd" class="input" style="width:75px" value="${isl.hoverDelay}" /><input type="number" id="di_cd" class="input" style="width:75px" value="${isl.collapseDelay}" /></div></div>
+                </div>
+                <div>
+                  <div class="setting-row"><div class="setting-label">Liquid Glass Translucent Mode</div><label class="switch"><input type="checkbox" id="di_gl" ${isl.glass ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Glass Darkness Opacity (0.0 – 1.0)</div><input type="number" id="di_go" step="0.05" class="input" style="width:85px" value="${isl.glassOpacity}" /></div>
+                  <div class="setting-row"><div class="setting-label">Album Artwork Ambient Glow</div><label class="switch"><input type="checkbox" id="di_am" ${isl.ambient ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Cava Audio-Reactive Breathing Glow</div><label class="switch"><input type="checkbox" id="di_aa" ${isl.ambientAudio ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Peek Banner on Track Change</div><label class="switch"><input type="checkbox" id="di_pt" ${isl.peekOnTrackChange ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Peek Banner When AI Agent Finishes</div><label class="switch"><input type="checkbox" id="di_pa" ${isl.peekOnAgentDone ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Auto-Expand on Agent Permission Prompt</div><label class="switch"><input type="checkbox" id="di_ap" ${isl.autoExpandPermission ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Hide Island on Fullscreen Windows</div><label class="switch"><input type="checkbox" id="di_hf" ${isl.hideOnFullscreen ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Reduce Motion</div><label class="switch"><input type="checkbox" id="di_rm" ${isl.reduceMotion ? 'checked' : ''} /><span class="slider"></span></label></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (tab === "notify") {
+          const nc = sh.notifications?.config || {};
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-solid fa-bell"></i> Notification Center & Do Not Disturb (jovibe.notify-center)</div>
+                  <div class="card-desc">Directly edits ~/.config/omarchy-notify-center/config.toml (live reloaded by Quickshell)</div>
+                </div>
+                <div class="setting-controls">
+                  <button class="btn btn-danger btn-sm" onclick="apiAction('notify.clear')"><i class="fa-solid fa-trash"></i> Clear History (${sh.notifications?.historyCount || 0})</button>
+                  <button class="btn btn-primary" onclick="apiAction('notify.save', {
+                    position: document.getElementById('nc_pos').value,
+                    timeout: Number(document.getElementById('nc_to').value),
+                    critical_timeout: Number(document.getElementById('nc_cto').value),
+                    sticky_critical: document.getElementById('nc_sc').checked,
+                    max_visible: Number(document.getElementById('nc_mv').value),
+                    history_limit: Number(document.getElementById('nc_hl').value),
+                    animation: document.getElementById('nc_an').checked,
+                    width: Number(document.getElementById('nc_w').value),
+                    dnd: document.getElementById('nc_dnd').checked
+                  })"><i class="fa-solid fa-floppy-disk"></i> Save Notification Settings</button>
+                </div>
+              </div>
+              <div class="grid-2">
+                <div>
+                  <div class="setting-row"><div class="setting-label">Do Not Disturb (Silence Popups)</div><label class="switch"><input type="checkbox" id="nc_dnd" ${nc.dnd ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Popup Screen Anchor Position</div><select id="nc_pos" class="select"><option value="right" ${nc.position==='right'?'selected':''}>Top Right</option><option value="center" ${nc.position==='center'?'selected':''}>Top Center</option><option value="left" ${nc.position==='left'?'selected':''}>Top Left</option></select></div>
+                  <div class="setting-row"><div class="setting-label">Normal Popup Duration (seconds)</div><input type="number" id="nc_to" class="input" style="width:80px" value="${nc.timeout}" /></div>
+                  <div class="setting-row"><div class="setting-label">Critical Popup Duration (seconds)</div><input type="number" id="nc_cto" class="input" style="width:80px" value="${nc.critical_timeout}" /></div>
+                </div>
+                <div>
+                  <div class="setting-row"><div class="setting-label">Keep Critical Until Dismissed</div><label class="switch"><input type="checkbox" id="nc_sc" ${nc.sticky_critical ? 'checked' : ''} /><span class="slider"></span></label></div>
+                  <div class="setting-row"><div class="setting-label">Max Visible Popup Cards (1–3)</div><input type="number" id="nc_mv" min="1" max="3" class="input" style="width:80px" value="${nc.max_visible}" /></div>
+                  <div class="setting-row"><div class="setting-label">Persistent History Limit</div><input type="number" id="nc_hl" class="input" style="width:90px" value="${nc.history_limit}" /></div>
+                  <div class="setting-row"><div class="setting-label">Card Width (px) & Slide Animation</div><div class="setting-controls"><input type="number" id="nc_w" class="input" style="width:80px" value="${nc.width}" /><label class="switch"><input type="checkbox" id="nc_an" ${nc.animation ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (tab === "barlayout") {
+          const bar = sh.shell?.bar || {};
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div><div class="card-title"><i class="fa-solid fa-table-columns"></i> Omarchy Top Bar Position & Plugins (~/.config/omarchy/shell.json)</div></div>
+                <button class="btn" onclick="apiAction('restart.service', {service:'shell'})"><i class="fa-solid fa-rotate"></i> Restart Quickshell Bar</button>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Bar Screen Edge Position</div><div class="setting-sub">Current: ${bar.position || 'top'}</div></div>
+                <div class="setting-controls">
+                  ${["top", "bottom", "left", "right"].map(p => `
+                    <button class="btn btn-sm ${bar.position === p ? 'btn-primary' : ''}" onclick="apiAction('bar.position', {position:'${p}'})">${p.toUpperCase()}</button>
+                  `).join("")}
+                  <button class="btn btn-sm" onclick="apiAction('bar.transparent')">Toggle Bar Transparency</button>
+                </div>
+              </div>
+              <table class="table" style="margin-top:10px">
+                <thead><tr><th>Plugin ID</th><th>Type</th><th>Status</th><th>Toggle</th></tr></thead>
+                <tbody>
+                  ${(sh.plugins || []).map(p => `
+                    <tr>
+                      <td class="mono">${p.id}</td>
+                      <td>${p.kind || 'bar'}</td>
+                      <td><span class="pill ${p.enabled ? 'pill-ok' : 'pill-neutral'}">${p.enabled ? 'Enabled' : 'Disabled'}</span></td>
+                      <td>
+                        <button class="btn btn-sm ${p.enabled ? 'btn-danger' : 'btn-primary'}" onclick="apiAction('plugin.toggle', {id:'${p.id}', enabled:${!p.enabled}})">
+                          ${p.enabled ? 'Disable' : 'Enable'}
+                        </button>
+                      </td>
+                    </tr>
+                  `).join("")}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+        // Pomodoro & Agents
+        const pomo = sh.pomodoro || {};
+        const agents = sh.agents || [];
+        return `
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-stopwatch"></i> Pomodoro Focus Timer (pomodoro-omarchy)</div></div>
+              <div class="setting-row"><span class="setting-label">Current Phase</span><span class="pill pill-ok">${pomo.phase || 'idle'} (${pomo.running ? 'Running' : 'Idle'})</span></div>
+              <div class="setting-row"><span class="setting-label">Work / Break Duration</span><span class="mono">${pomo.workMinutes || 25}m work / ${pomo.breakMinutes || 5}m break</span></div>
+              <div class="setting-row"><span class="setting-label">Completed Cycles</span><span class="mono">${pomo.cycleCount || 0}</span></div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-robot"></i> AI Coding Agents Usage (omarchy.agents Top Bar)</div>
+                <button class="btn btn-sm btn-primary" onclick="apiAction('agents.refresh')"><i class="fa-solid fa-rotate"></i> Refresh Quotas</button>
+              </div>
+              ${agents.map(a => `
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">${a.provider} <span class="mono" style="color:var(--fg-dim)">(${a.id})</span></div>
+                    <div class="setting-sub mono">Updated: ${a.updatedAt || 'recent'}</div>
+                  </div>
+                  <span class="pill pill-ok">Tracked</span>
+                </div>
+              `).join("") || '<div class="setting-sub">No agent usage snapshots in ~/.local/state/omarchy/agents/usage yet.</div>'}
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 9. APPEARANCE, THEMES, FONTS & DEFAULT APPS
+      // =====================================================================
+      if (cat === "appearance") {
+        const sh = STATE.shell || {};
+        if (tab === "wallpapers") {
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <div class="card-title"><i class="fa-solid fa-image"></i> Desktop Wallpaper & Lock Screen</div>
+                  <div class="card-desc">Current: ${sh.wallpaper?.current || 'Default'}</div>
+                </div>
+                <div class="setting-controls">
+                  <button class="btn btn-primary" onclick="apiAction('wallpaper.set', {wallpaper:'next'})"><i class="fa-solid fa-forward"></i> Next Wallpaper</button>
+                  <button class="btn" onclick="apiAction('lockscreen.trigger')"><i class="fa-solid fa-lock"></i> Test Lock Screen</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Wallpaper Switcher</div>
+                  <div class="setting-sub">Cycles through installed themes background pack</div>
+                </div>
+                <button class="btn btn-primary" onclick="apiAction('wallpaper.set', {wallpaper:'next'})">Cycle Wallpaper</button>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">Desktop & Lockscreen Widgets (glyph-widgets)</div>
+                  <div class="setting-sub">Quickshell desktop layer + lock.qml integration</div>
+                </div>
+                <div class="setting-controls">
+                  <span class="pill pill-ok">Configured</span>
+                  <button class="btn" onclick="apiAction('restart.service', {service:'shell'})"><i class="fa-solid fa-rotate"></i> Restart Shell Layer</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        if (tab === "fonts_apps") {
+          return `
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header"><div class="card-title"><i class="fa-solid fa-font"></i> System Monospace & UI Font (${sh.currentFont})</div></div>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  ${(sh.fonts || []).map(f => `
+                    <button class="btn ${f === sh.currentFont ? 'btn-primary' : ''}" onclick="apiAction('font.set', {font:'${f}'})">${f}</button>
+                  `).join("")}
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-header"><div class="card-title"><i class="fa-solid fa-compass"></i> Default Applications (xdg-settings)</div></div>
+                ${["browser", "editor", "terminal", "agent"].map(k => `
+                  <div class="setting-row">
+                    <div class="setting-label" style="text-transform:capitalize">Default ${k}</div>
+                    <div class="setting-controls">
+                      <input type="text" id="def_${k}" class="input mono" value="${sh.defaults?.[k] || ''}" />
+                      <button class="btn btn-sm btn-primary" onclick="apiAction('default.set', {kind:'${k}', value:document.getElementById('def_${k}').value})">Set</button>
+                    </div>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div><div class="card-title"><i class="fa-solid fa-swatchbook"></i> Omarchy Global Theme Switcher (Active: ${sh.currentTheme})</div></div>
+            </div>
+            <div class="grid-4">
+              ${(sh.themes || []).map(t => `
+                <button class="btn ${t === sh.currentTheme ? 'btn-primary' : ''}" style="justify-content:space-between;padding:10px 14px" onclick="apiAction('theme.set', {theme:'${t}'})">
+                  <span>${t}</span>
+                  ${t === sh.currentTheme ? '<i class="fa-solid fa-check"></i>' : ''}
+                </button>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 10. POWER & SUPER-BATTERY
+      // =====================================================================
+      if (cat === "power") {
+        const bat = STATE.system?.battery || {};
+        const sb = bat.superBattery || {};
+        if (tab === "governor") {
+          return `
+            <div class="card">
+              <div class="card-header"><div class="card-title"><i class="fa-solid fa-gauge"></i> CPU Power Governor, Idle Timers & Session Actions</div></div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Active Power Profile (powerprofilesctl)</div><div class="setting-sub">Current draw: ${bat.watts} W · Health: ${bat.health}% (${bat.cycles} cycles)</div></div>
+                <div class="setting-controls">
+                  ${["power-saver", "balanced", "performance"].map(p => `
+                    <button class="btn ${bat.profile === p ? 'btn-primary' : ''}" onclick="apiAction('power.profile', {profile:'${p}'})">${p}</button>
+                  `).join("")}
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Screensaver & Auto-Lock Idle Timers (seconds)</div><div class="setting-sub">Stored in ~/.config/omarchy/shell.json idle block</div></div>
+                <div class="setting-controls">
+                  <input type="number" id="idle_ss" class="input" style="width:90px" value="${bat.idle?.screensaver || 150}" title="Screensaver (s)" />
+                  <input type="number" id="idle_lk" class="input" style="width:90px" value="${bat.idle?.lock || 300}" title="Lock (s)" />
+                  <button class="btn btn-primary" onclick="apiAction('idle.save', {screensaver:document.getElementById('idle_ss').value, lock:document.getElementById('idle_lk').value})">Save Timers</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <div class="setting-info"><div class="setting-label">Session & Hardware Power Actions</div></div>
+                <div class="setting-controls">
+                  <button class="btn" onclick="apiAction('power.action', {sub:'lock'})"><i class="fa-solid fa-lock"></i> Lock Screen</button>
+                  <button class="btn" onclick="apiAction('power.action', {sub:'suspend'})"><i class="fa-solid fa-moon"></i> Suspend</button>
+                  <button class="btn btn-danger" onclick="apiAction('power.action', {sub:'reboot'})"><i class="fa-solid fa-rotate"></i> Reboot</button>
+                  <button class="btn btn-danger" onclick="apiAction('power.action', {sub:'shutdown'})"><i class="fa-solid fa-power-off"></i> Shutdown</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-battery-three-quarters"></i> Super-Battery Automation & Charge Thresholds (paulbob.super-battery Top Bar)</div>
+                <div class="card-desc">Directly edits paulbob.super-battery settings in ~/.config/omarchy/shell.json</div>
+              </div>
+              <button class="btn btn-primary" onclick="apiAction('superbattery.save', {
+                chargeLimitOn: document.getElementById('sb_clo').checked,
+                chargeLimit: Number(document.getElementById('sb_cl').value),
+                saverOn: document.getElementById('sb_so').checked,
+                saverLevel: Number(document.getElementById('sb_sl').value),
+                warningOn: document.getElementById('sb_wo').checked,
+                warningLevel: Number(document.getElementById('sb_wl').value),
+                criticalOn: document.getElementById('sb_co').checked,
+                criticalLevel: Number(document.getElementById('sb_crl').value),
+                showPercentage: document.getElementById('sb_sp').checked,
+                notify: document.getElementById('sb_nt').checked,
+                volume: Number(document.getElementById('sb_vol').value)
+              })"><i class="fa-solid fa-floppy-disk"></i> Save Super-Battery Config</button>
+            </div>
+            <div class="grid-2">
+              <div>
+                <div class="setting-row"><div class="setting-label">Battery Charge Ceiling Limit (%)</div><div class="setting-controls"><input type="number" id="sb_cl" class="input" style="width:75px" value="${sb.chargeLimit}" /><label class="switch"><input type="checkbox" id="sb_clo" ${sb.chargeLimitOn ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+                <div class="setting-row"><div class="setting-label">Auto Power-Saver Trigger Level (%)</div><div class="setting-controls"><input type="number" id="sb_sl" class="input" style="width:75px" value="${sb.saverLevel}" /><label class="switch"><input type="checkbox" id="sb_so" ${sb.saverOn ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+                <div class="setting-row"><div class="setting-label">Low Battery Warning Alert (%)</div><div class="setting-controls"><input type="number" id="sb_wl" class="input" style="width:75px" value="${sb.warningLevel}" /><label class="switch"><input type="checkbox" id="sb_wo" ${sb.warningOn ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+              </div>
+              <div>
+                <div class="setting-row"><div class="setting-label">Critical Battery Alert (%)</div><div class="setting-controls"><input type="number" id="sb_crl" class="input" style="width:75px" value="${sb.criticalLevel}" /><label class="switch"><input type="checkbox" id="sb_co" ${sb.criticalOn ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+                <div class="setting-row"><div class="setting-label">Show Percentage in Top Bar</div><label class="switch"><input type="checkbox" id="sb_sp" ${sb.showPercentage ? 'checked' : ''} /><span class="slider"></span></label></div>
+                <div class="setting-row"><div class="setting-label">Desktop Notifications & Alert Volume (%)</div><div class="setting-controls"><input type="number" id="sb_vol" class="input" style="width:75px" value="${sb.volume}" /><label class="switch"><input type="checkbox" id="sb_nt" ${sb.notify ? 'checked' : ''} /><span class="slider"></span></label></div></div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 11. SYSTEM OPTIMIZATION, PURGE & BENCHMARKS
+      // =====================================================================
+      if (cat === "optimize") {
+        const mem = STATE.system?.memory || {};
+        const usedPct = Math.round(((mem.used || 0) / (mem.total || 1)) * 100);
+        const swapPct = Math.round(((mem.swapUsed || 0) / (mem.swapTotal || 1)) * 100);
+        if (tab === "storage") {
+          return `
+            <div class="card">
+              <div class="card-header">
+                <div class="card-title"><i class="fa-solid fa-hard-drive"></i> Block Devices, Btrfs & Disk Speedtest</div>
+                <button class="btn btn-primary" onclick="apiAction('disk.speedtest')"><i class="fa-solid fa-gauge-high"></i> Run NVMe Disk Speedtest</button>
+              </div>
+              <pre class="mono" style="font-size:11.5px;color:var(--fg-dim)">${JSON.stringify(STATE.system?.disks || [], null, 2)}</pre>
+            </div>
+          `;
+        }
+        return `
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-fire-flame-curved"></i> Hardware Memory, Cache, Swap & ZRAM Purge Engine</div>
+                <div class="card-desc">CPU: ${STATE.system?.cpu?.model || ''} · Kernel ${STATE.system?.cpu?.kernel || ''} · Load: ${(STATE.system?.cpu?.loadavg || []).join(' / ')}</div>
+              </div>
+              <button class="btn btn-primary" onclick="apiAction('optimize.purge', {target:'all'})"><i class="fa-solid fa-broom"></i> 1-Click Master System Purge</button>
+            </div>
+            <div class="grid-2" style="margin-bottom:14px">
+              <div class="expand-box">
+                <div style="display:flex;justify-content:space-between"><span>Physical RAM Used</span><span class="mono">${fmtBytes(mem.used)} / ${fmtBytes(mem.total)} (${usedPct}%)</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:${usedPct}%"></div></div>
+                <div class="setting-sub mono" style="margin-top:6px">PageCache/Buffers: ${fmtBytes(mem.cached)} · Available: ${fmtBytes(mem.available)}</div>
+              </div>
+              <div class="expand-box">
+                <div style="display:flex;justify-content:space-between"><span>Swap & Compressed ZRAM</span><span class="mono">${fmtBytes(mem.swapUsed)} / ${fmtBytes(mem.swapTotal)} (${swapPct}%)</span></div>
+                <div class="progress-track"><div class="progress-fill" style="width:${swapPct}%"></div></div>
+                <div class="setting-sub mono" style="margin-top:6px">Pacman Package Cache: ${fmtBytes(STATE.system?.omarchy?.pacmanCacheBytes || 0)}</div>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Purge RAM PageCache, Dentries & Inodes</div><div class="setting-sub mono">sync && echo 3 > /proc/sys/vm/drop_caches</div></div>
+              <button class="btn btn-primary" onclick="apiAction('optimize.purge', {target:'ram'})">Purge RAM Cache</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Compact Physical Memory Zones (Defragment HugePages)</div><div class="setting-sub mono">echo 1 > /proc/sys/vm/compact_memory</div></div>
+              <button class="btn" onclick="apiAction('optimize.purge', {target:'compact'})">Compact RAM</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Flush Swap & Decompress ZRAM back to Fast RAM</div><div class="setting-sub mono">swapoff -a && swapon -a</div></div>
+              <button class="btn" onclick="apiAction('optimize.purge', {target:'swap'})">Flush Swap & ZRAM</button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Vacuum Systemd Journal Logs & Prune Pacman Cache</div><div class="setting-sub mono">journalctl --vacuum-time=2d && omarchy-update-pkg-prune</div></div>
+              <div class="setting-controls">
+                <button class="btn" onclick="apiAction('optimize.purge', {target:'journal'})">Vacuum Journal</button>
+                <button class="btn" onclick="apiAction('optimize.purge', {target:'pacman'})">Prune Pacman Cache</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      // =====================================================================
+      // 12. CYBER SECURITY, LUKS2, UPDATES & SUBSYSTEM RESTARTS
+      // =====================================================================
+      const sec = STATE.system?.security || {};
+      const om = STATE.system?.omarchy || {};
+      const dt = STATE.system?.datetime || {};
+      if (tab === "updates") {
+        return `
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i class="fa-solid fa-arrows-rotate"></i> Omarchy Release Channel, Timezone & Subsystem Restarts</div></div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">Omarchy OS Version & Release Channel</div><div class="setting-sub mono">Version: ${om.version} · Active Channel: ${om.channel}</div></div>
+              <div class="setting-controls">
+                ${["stable", "rc", "edge", "dev"].map(c => `
+                  <button class="btn btn-sm ${om.channel === c ? 'btn-primary' : ''}" onclick="apiAction('channel.set', {channel:'${c}'})">${c}</button>
+                `).join("")}
+              </div>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">System Timezone & NTP Synchronization</div><div class="setting-sub mono">${dt.localTime} · Timezone: ${dt.timezone}</div></div>
+              <span class="pill ${dt.ntp ? 'pill-ok' : 'pill-warn'}">NTP: ${dt.ntp ? 'Synchronized' : 'Off'}</span>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-label">1-Click Subsystem Restarts (omarchy-restart-*)</div><div class="setting-sub">Restart individual daemons without logging out</div></div>
+              <div class="setting-controls">
+                ${["shell", "wifi", "bluetooth", "audio", "hyprctl", "hyprsunset", "trackpad", "walker"].map(s => `
+                  <button class="btn btn-sm" onclick="apiAction('restart.service', {service:'${s}'})"><i class="fa-solid fa-rotate"></i> ${s}</button>
+                `).join("")}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      return `
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i class="fa-solid fa-user-shield"></i> Cyber Security, LUKS2 Disk Encryption & Authentication</div></div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">LUKS2 Full-Disk Volume Encryption</div><div class="setting-sub">Root Btrfs container encrypted via dm-crypt / cryptsetup</div></div>
+            <span class="pill ${sec.luksActive ? 'pill-ok' : 'pill-warn'}">${sec.luksActive ? 'LUKS2 Active & Locked' : 'Unencrypted'}</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Netfilter / UFW Firewall Status</div><div class="setting-sub">Host packet filtering & hotspot NAT isolation</div></div>
+            <span class="pill ${sec.ufwActive ? 'pill-ok' : 'pill-neutral'}">${sec.ufwActive ? 'UFW Active' : 'Netfilter / iptables Active'}</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">OpenSSH Server Daemon (sshd)</div><div class="setting-sub">Inbound remote shell access status</div></div>
+            <span class="pill ${sec.sshd ? 'pill-warn' : 'pill-ok'}">${sec.sshd ? 'SSHD Running' : 'SSHD Disabled (Safe)'}</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info"><div class="setting-label">Biometric Fingerprint Sensor (fprintd)</div><div class="setting-sub">PAM authentication for sudo & lock screen</div></div>
+            <span class="pill ${sec.fingerprint ? 'pill-ok' : 'pill-neutral'}">${sec.fingerprint ? 'Installed' : 'Not Installed'}</span>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <div class="setting-label">Howdy Facial Recognition Authentication (/usr/bin/howdy)</div>
+              <div class="setting-sub">IR camera face unlock for lock screen, sudo & PAM</div>
+            </div>
+            <div class="setting-controls">
+              <span class="pill ${sec.howdy?.installed ? 'pill-ok' : 'pill-warn'}">${sec.howdy?.installed ? 'Installed & Configured' : 'Not Found'}</span>
+              ${sec.howdy?.installed ? `<button class="btn btn-sm btn-primary" onclick="apiAction('howdy.test')"><i class="fa-solid fa-camera"></i> Test Facial Match</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    refreshState();
+  </script>
+</body>
+</html>

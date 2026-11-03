@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Arch Control Center
+GenericName=System Settings
+Comment=Comprehensive Control Center for Arch Linux
+Exec=/usr/local/bin/arch-control-center
+Icon=arch-control-center
+Terminal=false
+Type=Application
+Categories=Settings;HardwareSettings;System;
+StartupNotify=true
+StartupWMClass=arch-control-center
+Keywords=settings;control;center;wifi;bluetooth;audio;power;display;network;arch;

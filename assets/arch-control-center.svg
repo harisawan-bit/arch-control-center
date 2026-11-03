@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#141215"/>
+      <stop offset="100%" stop-color="#0a090b"/>
+    </linearGradient>
+    <linearGradient id="archGrad" x1="0%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#1793d1"/>
+      <stop offset="50%" stop-color="#33aadd"/>
+      <stop offset="100%" stop-color="#b59790"/>
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b59790"/>
+      <stop offset="100%" stop-color="#87a9b0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+    </filter>
+  </defs>
+
+  <!-- Base App Tile with Smooth Rounded Corners -->
+  <rect x="24" y="24" width="464" height="464" rx="108" fill="url(#bgGrad)" stroke="rgba(250, 252, 251, 0.12)" stroke-width="4" filter="url(#shadow)"/>
+
+  <!-- Subtle Inner Glow Ring -->
+  <rect x="36" y="36" width="440" height="440" rx="96" fill="none" stroke="rgba(181, 151, 144, 0.15)" stroke-width="2"/>
+
+  <!-- Arch Linux Swoop / Control Center Geometric Emblem -->
+  <g transform="translate(0, -6)">
+    <!-- Main Arch Silhouette -->
+    <path d="M 256,110 C 235,160 215,200 196,242 C 214,260 236,270 262,270 C 285,270 305,262 321,248 C 300,202 278,158 256,110 Z" fill="url(#archGrad)"/>
+    <path d="M 256,88 L 132,382 C 160,396 188,404 220,404 C 238,374 252,348 266,322 C 246,316 232,306 220,292 C 234,278 250,270 270,270 C 290,270 308,278 322,294 C 336,322 350,348 368,404 C 398,404 426,396 454,382 L 256,88 Z" fill="url(#archGrad)" opacity="0.95"/>
+    
+    <!-- Modern Minimalist Sliders/Controls Overlay -->
+    <g stroke="url(#accentGrad)" stroke-width="12" stroke-linecap="round">
+      <!-- Top Slider Track & Knob -->
+      <line x1="160" y1="200" x2="352" y2="200" opacity="0.35"/>
+      <circle cx="280" cy="200" r="16" fill="#FAFCFB" stroke="url(#accentGrad)" stroke-width="8"/>
+
+      <!-- Mid Slider Track & Knob -->
+      <line x1="130" y1="260" x2="382" y2="260" opacity="0.35"/>
+      <circle cx="210" cy="260" r="16" fill="#FAFCFB" stroke="url(#accentGrad)" stroke-width="8"/>
+
+      <!-- Bottom Slider Track & Knob -->
+      <line x1="150" y1="320" x2="362" y2="320" opacity="0.35"/>
+      <circle cx="310" cy="320" r="16" fill="#FAFCFB" stroke="url(#accentGrad)" stroke-width="8"/>
+    </g>
+  </g>
+</svg>
