@@ -18,8 +18,12 @@ from backend import HTTPServer, Handler
 PORT = 4455
 
 def start_server():
-    server = HTTPServer(("127.0.0.1", PORT), Handler)
-    server.serve_forever()
+    try:
+        server = HTTPServer(("127.0.0.1", PORT), Handler)
+        server.serve_forever()
+    except OSError:
+        # Existing instance or server already listening on PORT
+        pass
 
 def run_gtk():
     import gi
